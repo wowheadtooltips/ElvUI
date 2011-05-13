@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ### ElvUI Tweaks By: Lockslap <adam@wowhead-tooltips.com>
 _I recently started using [ElvUI](http://www.tukui.org/forums/forum.php?id=84 "ElvUI") for my WoW UI, and came up with ideas that would change/improve/tweak some minor features.  There are __NO__ major changes, mostly just some minor tweaks to the functionality/tooltips of the datatexts._
 
@@ -11,6 +10,3 @@ _I recently started using [ElvUI](http://www.tukui.org/forums/forum.php?id=84 "E
 *  Added option to always use Guild bank funds to repair.
 *  Tweaked system datatext to only display the top 20 addon memory usage.
 *  Tweaked bag datatext's tooltip to show the free slots status of your character's bags.  Also modified the click functionality to open keyring with right click, open all bags with left click.
-=======
-### ElvUI Tweaks by Lockslap
->>>>>>> origin/master
