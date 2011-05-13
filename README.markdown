@@ -9,4 +9,4 @@ _I recently started using [ElvUI](http://www.tukui.org/forums/forum.php?id=84 "E
 *  Added `/played` display to the Time datatext's tooltips.
 *  Added option to always use Guild bank funds to repair.
 *  Tweaked system datatext to only display the top 20 addon memory usage.
-*  Tweaked bag datatext's tooltip to show the free slots status of your character's bags.  Also modified the click functionality to open keyring with right click, all bags with left click.
+*  Tweaked bag datatext's tooltip to show the free slots status of your character's bags.  Also modified the click functionality to open keyring with right click, open all bags with left click.
