@@ -1,0 +1,8 @@
+## Interface: 40000
+## Title: |cffC495DDElvUI Tweaks|r
+## Notes: ElvUI Tweaks
+## Author: Tacsko
+## Version 1.0
+## RequiredDeps: ElvUI
+
+ElvUI_Tweaks.lua

@@ -1,0 +1,12 @@
+## Interface: 40100
+## Author: Elv
+## Title: |cff1784d1ElvUI|r (Healer Layout)
+## Notes: Unitframe layout for party and raid, Healer mode.
+## X-Category: UnitFrame
+## RequiredDeps: ElvUI
+## OptionalDeps: ElvUI_Dps_Layout
+
+init.lua
+raid\party.lua
+raid\raid25.lua
+raid\raid40.lua

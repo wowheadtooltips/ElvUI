@@ -1,0 +1,12 @@
+﻿<Ui xmlns="http://www.blizzard.com/wow/ui/">	
+	<Script file='core.lua'/>
+	<Script file='launch.lua'/>
+	<Script file='pixelperfect.lua'/>
+	<Script file='toolkit.lua'/>
+	<Script file='math.lua'/>
+	<Script file='colors.lua'/>
+	<Script file='commands.lua'/>
+	<Script file='staticpopups.lua'/>
+	<Script file='animation.lua'/>
+	<Script file='movers.lua'/>
+</Ui>
