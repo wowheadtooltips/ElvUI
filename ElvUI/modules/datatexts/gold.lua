@@ -90,7 +90,7 @@ Stat:SetScript("OnEnter", function(self)
 		GameTooltip:AddDoubleLine(L.datatext_earned, formatMoney(Profit), 1, 1, 1, 1, 1, 1)
 		GameTooltip:AddDoubleLine(L.datatext_spent, formatMoney(Spent), 1, 1, 1, 1, 1, 1)
 		if Profit < Spent then
-			GameTooltip:AddDoubleLine(L.datatext_deficit, formatMoney(Profit-Spent), 1, 0, 0, 1, 1, 1)
+			GameTooltip:AddDoubleLine(L.datatext_deficit, formatMoney(Spent - Profit), 1, 0, 0, 1, 1, 1)
 		elseif (Profit-Spent)>0 then
 			GameTooltip:AddDoubleLine(L.datatext_profit, formatMoney(Profit-Spent), 0, 1, 0, 1, 1, 1)
 		end				

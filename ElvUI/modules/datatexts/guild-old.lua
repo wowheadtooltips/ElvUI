@@ -1,7 +1,8 @@
 --------------------------------------------------------------------
 -- GUILD ROSTER
 --------------------------------------------------------------------
-local E, C, L, DB = unpack(select(2, ...)) -- Import Functions/Constants, Config, Locales
+local E, C, L, DB = unpack(select(2, ...)) 	-- Import Functions/Constants, Config, Locales
+local QTip = LibStub('LibQTip-1.0')		-- For Improved Tooltip functionality
 
 if not C["datatext"].guild or C["datatext"].guild == 0 then return end
 
@@ -47,7 +48,11 @@ Stat:SetAllPoints(Text)
 local function SortGuildTable(shift)
 	sort(guildTable, function(a, b)
 		if a and b then
-			return a[1] < b[1]
+			if shift then
+				return a[10] < b[10]
+			else
+				return a[1] < b[1]
+			end
 		end
 	end)
 end
@@ -57,16 +62,16 @@ local function BuildGuildTable()
 	local name, rank, level, zone, note, officernote, connected, status, class, achievementPoints, achievementRank, isMobile
 	local count = 0
 	for i = 1, GetNumGuildMembers() do
+		--name, rank, rankIndex, level, _, zone, note, officernote, connected, status, class = GetGuildRosterInfo(i)
 		name, rank, rankIndex, level, _, zone, note, officernote, connected, status, class, achievementPoints, achievementRank, isMobile = GetGuildRosterInfo(i)
 		-- we are only interested in online members
 		if connected then 
 			count = count + 1
-
 			if isMobile then
 				status = "|cffff0000[Mobile]"
 				zone = "Remote Chat"
 			end
-			guildTable[count] = { name, rank, level, zone, note, officernote, connected, status, class, rankIndex, isMobile }
+			guildTable[count] = { name, rank, level, zone, note, officernote, connected, status, class, rankIndex }
 		end
 	end
 	SortGuildTable(IsShiftKeyDown())
@@ -95,7 +100,6 @@ local function Update(self, event, ...)
 			local message = select(1, ...)
 			if find(message, friendOnline) or find(message, friendOffline) then GuildRoster() end
 		end
-			
 		-- our guild xp changed, recalculate it
 		if event == "GUILD_XP_UPDATE" then UpdateGuildXP() return end
 		-- our guild message of the day changed
@@ -204,11 +208,13 @@ Stat:SetScript("OnEnter", function(self)
 	local col = E.RGBToHex(ttsubh.r, ttsubh.g, ttsubh.b)
 	GameTooltip:AddLine(' ')
 	if GetGuildLevel() ~= 25 then
-		local currentXP, nextLevelXP, percentTotal = unpack(guildXP[0])
-		local dailyXP, maxDailyXP, percentDaily = unpack(guildXP[1])
-				
-		GameTooltip:AddLine(format(guildXpCurrentString, E.ShortValue(currentXP), E.ShortValue(nextLevelXP), percentTotal))
-		GameTooltip:AddLine(format(guildXpDailyString, E.ShortValue(dailyXP), E.ShortValue(maxDailyXP), percentDaily))
+		if guildXP[0] and guildXP[1] then
+			local currentXP, nextLevelXP, percentTotal = unpack(guildXP[0])
+			local dailyXP, maxDailyXP, percentDaily = unpack(guildXP[1])
+					
+			GameTooltip:AddLine(format(guildXpCurrentString, E.ShortValue(currentXP), E.ShortValue(nextLevelXP), percentTotal))
+			GameTooltip:AddLine(format(guildXpDailyString, E.ShortValue(dailyXP), E.ShortValue(maxDailyXP), percentDaily))
+		end
 	end
 	
 	local _, _, standingID, barMin, barMax, barValue = GetGuildFactionInfo()
@@ -226,8 +232,8 @@ Stat:SetScript("OnEnter", function(self)
 		GameTooltip:AddLine(' ')
 		for i = 1, #guildTable do
 			-- if more then 30 guild members are online, we don't Show any more, but inform user there are more
-			if 50 - shown <= 1 then
-				if online - 50 > 1 then GameTooltip:AddLine(format(moreMembersOnlineString, online - 50), ttsubh.r, ttsubh.g, ttsubh.b) end
+			if 30 - shown <= 1 then
+				if online - 30 > 1 then GameTooltip:AddLine(format(moreMembersOnlineString, online - 30), ttsubh.r, ttsubh.g, ttsubh.b) end
 				break
 			end
 
@@ -242,12 +248,15 @@ Stat:SetScript("OnEnter", function(self)
 					if info[6] ~= "" then GameTooltip:AddLine(format(officerNoteString, info[6]), ttoff.r, ttoff.g, ttoff.b, 1) end
 				else
 					GameTooltip:AddDoubleLine(format(levelNameStatusString, levelc.r*255, levelc.g*255, levelc.b*255, info[3], info[1], info[8], info[2]), info[4], classc.r,classc.g,classc.b, zonec.r,zonec.g,zonec.b)
+					--GameTooltip:AddDoubleLine(format(levelNameStatusString, levelc.r*255, levelc.g*255, levelc.b*255, info[3], info[1], info[8]), info[4], classc.r,classc.g,classc.b, zonec.r,zonec.g,zonec.b)
 				end
 				shown = shown + 1
 			end
 		end
 	end
-	GameTooltip:AddLine(" ", 0, 0, 0)
+	GameTooltip:AddLine(" ")
+	GameTooltip:AddLine("|cffeda55fLeft Click|r to Show Guild Panel")
+	GameTooltip:AddLine("|cffeda55fRight Click|r for More Options")
 	GameTooltip:Show()
 end)
 
