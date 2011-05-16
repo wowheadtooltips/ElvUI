@@ -17,7 +17,6 @@ local ceil			= math.ceil
 local displayString = join("", GUILD, ": ", E.ValColor, "%d|r")
 local noGuildString = join("", E.ValColor, L.datatext_noguild)
 
-
 -------------------------------------------------------------------------------
 -- Font definitions.
 -------------------------------------------------------------------------------
@@ -180,10 +179,10 @@ local function Update(self, event, ...)
 end
 
 local function SetGuildSort(cell, sortsection)
-	if Broker_SocialStateDB["GuildSort"] == sortsection then
-		Broker_SocialStateDB["GuildSort"] = "rev" .. sortsection
+	if DB["GuildSort"] == sortsection then
+		DB["GuildSort"] = "rev" .. sortsection
 	else
-		Broker_SocialStateDB["GuildSort"] = sortsection
+		DB["GuildSort"] = sortsection
 	end
 	LDB.OnEnter(LDB_ANCHOR)
 end
@@ -290,8 +289,6 @@ Stat:SetScript("OnEnter", function(self)
 		line = tooltip:AddLine()
 		tooltip:SetCell(line, 1, "|cffffffff" .. ssGuildName .."|r", "LEFT", 3)
 
-		tooltip:AddSeparator()
-
 		line = tooltip:AddLine()
 		tooltip:SetCell(line, 1, "|cff00ff00"..GetGuildRosterMOTD().."|r", "LEFT", 0, nil, nil, nil, 100)
 
@@ -304,6 +301,7 @@ Stat:SetScript("OnEnter", function(self)
 		tooltip:SetCellScript(line, 5, "OnMouseUp", SetGuildSort, "ZONENAME")
 		line = tooltip:SetCell(line, 6, _G.RANK)
 		tooltip:SetCellScript(line, 6, "OnMouseUp", SetGuildSort, "RANKINDEX")
+		tooltip:AddSeparator()
 
 		for i = 1, GetNumGuildMembers() do
 			local toonName, rank, rankindex, level, class, zoneName, note, onote, connected, status = GetGuildRosterInfo(i)
@@ -328,22 +326,22 @@ Stat:SetScript("OnEnter", function(self)
 					NOTE = note,
 					ONOTE = onote,
 					STATUS = status
-					})
+				})
 			end
 		end
 
-		table.sort(guild_table, list_sort["TOONNAME"])
+		sort(guild_table, list_sort["TOONNAME"])
 
 		for _, player in ipairs(guild_table) do
 			line = tooltip:AddLine()
 			line = tooltip:SetCell(line, 1, ColoredLevel(player["LEVEL"]))
 			line = tooltip:SetCell(line, 2, player["STATUS"])
 			line = tooltip:SetCell(line, 3,
-				string.format("|cff%s%s", CLASS_COLORS[player["CLASS"]] or "ffffff", player["TOONNAME"] .. "|r") .. (inGroup(player["TOONNAME"]) and GROUP_CHECKMARK or ""))
+				format("|cff%s%s", CLASS_COLORS[player["CLASS"]] or "ffffff", player["TOONNAME"] .. "|r") .. (inGroup(player["TOONNAME"]) and GROUP_CHECKMARK or ""))
 			line = tooltip:SetCell(line, 5, player["ZONENAME"] or "???")
 			line = tooltip:SetCell(line, 6, player["RANK"])
 			line = tooltip:SetCell(line, 7, player["NOTE"] .. player["ONOTE"])
-			tooltip:SetLineScript(line, "OnMouseUp", Entry_OnMouseUp, string.format("guild:%s:%s", player["TOONNAME"], player["TOONNAME"]))
+			tooltip:SetLineScript(line, "OnMouseUp", Entry_OnMouseUp, format("guild:%s:%s", player["TOONNAME"], player["TOONNAME"]))
 		end
 	end
 	
