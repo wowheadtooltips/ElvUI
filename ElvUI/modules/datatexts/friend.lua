@@ -3,6 +3,7 @@
 --------------------------------------------------------------------
 local E, C, L, DB = unpack(select(2, ...)) -- Import Functions/Constants, Config, Locales
 local LibQTip = LibStub('LibQTip-1.0')	-- tooltip library
+local tooltip
 
 if not C["datatext"].friends or C["datatext"].friends == 0 then return end
 
@@ -137,13 +138,14 @@ local function SetRealIDSort(cell, sortsection)
 	--LDB.OnEnter(LDB_ANCHOR)
 end
 
-local function Update(self, event, ...)
-	local NumFriends, online = GetNumFriends()
-	local realidTotal, realidOnline = BNGetNumFriends()
-
-	displayline = online + realidOnline
-	Text:SetFormattedText(displayString, L.datatext_friends, displayline)
-	self:SetAllPoints(Text)
+local function EventHandler(self, event, ...)
+	if event == "PLAYER_ENTERING_WORLD" then
+		local NumFriends, online = GetNumFriends()
+		local realidTotal, realidOnline = BNGetNumFriends()
+		displayline = online + realidOnline
+		Text:SetFormattedText(displayString, L.datatext_friends, displayline)
+		self:SetAllPoints(Text)
+	end
 end
 
 local function inGroup(name)
@@ -155,10 +157,6 @@ local function inGroup(name)
 
 	return false
 end
-
-Stat:SetScript("OnMouseUp", function(self, btn)
-
-end)
 
 ----------------------------
 --  If names are clicked  --
@@ -200,7 +198,13 @@ local function Entry_OnMouseUp(frame, info, button)
 	end
 end
 	
-Stat:SetScript("OnMouseDown", function(self, btn) if btn == "LeftButton" then ToggleFriendsFrame(1) end end)
+Stat:SetScript("OnMouseDown", function(self, button)
+	if button == "LeftButton" then 
+		ToggleFriendsFrame(1)
+	elseif button == "RightButton" then
+		StaticPopup_Show("SET_BN_BROADCAST")
+	end
+end)
 
 ------------------------
 --      Tooltip!      --
@@ -245,11 +249,12 @@ Stat:SetScript("OnEnter", function(self)
 	else
 		local _, panel, _, _ = E.DataTextTooltipAnchor(Text)	-- to properly place the tooltip
 		tooltip = LibQTip:Acquire("Stat", 7, "RIGHT", "RIGHT", "LEFT", "LEFT", "CENTER", "CENTER", "RIGHT")
+		self.tooltip = tooltip
 		tooltip:SetBackdropColor(0,0,0,1)
 		tooltip:SetHeaderFont(ssHeaderFont)
 		tooltip:SetFont(ssRegFont)
 		tooltip:SmartAnchorTo(panel)
-		tooltip:SetAutoHideDelay(0.1, self)
+		tooltip:SetAutoHideDelay(0.001, self)
 	end
 
 	local line = tooltip:AddLine()
@@ -418,18 +423,41 @@ Stat:SetScript("OnEnter", function(self)
 	line = tooltip:AddLine()
 	tooltip:SetCell(line, 1, "Hint:", "LEFT", 3)
 	line = tooltip:AddLine()
-	tooltip:SetCell(line, 1, "|cffeda55fAlt-Click|r to open the guild panel.", "LEFT", 0)
+	tooltip:SetCell(line, 1, "|cffeda55fLeft-Click|r to open the friend panel.    |cffeda55fRight-Click|r to set a broadcast message.", "LEFT", 0)
 	line = tooltip:AddLine()
 	tooltip:SetCell(line, 1, "|cffeda55fClick|r a line to whisper a player.  |cffeda55fShift-Click|r a line to lookup a player.", "LEFT", 0)
 	line = tooltip:AddLine()
-	tooltip:SetCell(line, 1, "|cffeda55fCtrl-Click|r a line to edit a note.    |cffeda55fCtrl-RightClick|r a line to edit an officer note.", "LEFT", 0)
+	tooltip:SetCell(line, 1, "|cffeda55fCtrl-Click|r a line to edit a note.    |cffeda55fAlt-Click|r a line to invite.", "LEFT", 0)
 	line = tooltip:AddLine()
-	tooltip:SetCell(line, 1, "|cffeda55fAlt-Click|r a line to invite.    |cffeda55fClick|r a Header to sort it.", "LEFT", 0)
+	tooltip:SetCell(line, 1, "|cffeda55fClick|r a Header to sort it.", "LEFT", 0)
 
 	tooltip:UpdateScrolling()
 	tooltip:Show()	
 end)
 
+Stat:SetScript("OnLeave", function(self)
+	LibQTip:Release(self.tooltip)
+	self.tooltip = nil
+end)
+
+local DELAY = 15  --  Update every 15 seconds
+local elapsed = DELAY - 5
+
+Stat:SetScript("OnUpdate", function (self, el)
+	elapsed = elapsed + el
+
+	if elapsed >= DELAY then
+		elapsed = 0
+		local NumFriends, online = GetNumFriends()
+		local realidTotal, realidOnline = BNGetNumFriends()
+		displayline = online + realidOnline
+		Text:SetFormattedText(displayString, L.datatext_friends, displayline)
+		self:SetAllPoints(Text)
+	end
+end)
+
 Stat:RegisterEvent("PLAYER_ENTERING_WORLD")
+
+
 Stat:SetScript("OnLeave", function() end)
-Stat:SetScript("OnEvent", Update)
+Stat:SetScript("OnEvent", EventHandler)

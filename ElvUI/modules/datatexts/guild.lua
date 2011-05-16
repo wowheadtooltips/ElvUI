@@ -3,6 +3,7 @@
 --------------------------------------------------------------------
 local E, C, L, DB = unpack(select(2, ...)) -- Import Functions/Constants, Config, Locales
 local LibQTip = LibStub('LibQTip-1.0')	-- tooltip library
+local tooltip
 
 if not C["datatext"].guild or C["datatext"].guild == 0 then return end
 
@@ -131,27 +132,6 @@ Stat:SetAllPoints(Text)
 ------------------------
 --	Helper Functions  --
 ------------------------
-local function UpdateGuildXP()
-	local currentXP, remainingXP, dailyXP, maxDailyXP = UnitGetGuildXP("player")
-	local nextLevelXP = currentXP + remainingXP
-	local percentTotal = ceil((currentXP / nextLevelXP) * 100)
-	local percentDaily = ceil((dailyXP / maxDailyXP) * 100)
-	
-	guildXP[0] = { currentXP, nextLevelXP, percentTotal }
-	guildXP[1] = { dailyXP, maxDailyXP, percentDaily }
-end
-
-local function ToggleGuildFrame()
-	if IsInGuild() then
-		if not GuildFrame then LoadAddOn("Blizzard_GuildUI") end
-		GuildFrame_Toggle()
-		GuildFrame_TabClicked(GuildFrameTab2)
-	else
-		if not LookingForGuildFrame then LoadAddOn("Blizzard_LookingForGuildUI") end
-		if LookingForGuildFrame then LookingForGuildFrame_Toggle() end
-	end
-end
-
 local function ColoredLevel(level)
 	if level ~= "" then
 		local color = GetQuestDifficultyColor(level)
@@ -169,15 +149,6 @@ local function inGroup(name)
 	return false
 end
 
-local function Update(self, event, ...)	
-	if IsInGuild() then
-		local _, online = GetNumGuildMembers()
-		Text:SetFormattedText(displayString, online)
-	else
-		Text:SetText(noGuildString)
-	end
-end
-
 local function SetGuildSort(cell, sortsection)
 	if DB["GuildSort"] == sortsection then
 		DB["GuildSort"] = "rev" .. sortsection
@@ -185,6 +156,15 @@ local function SetGuildSort(cell, sortsection)
 		DB["GuildSort"] = sortsection
 	end
 	LDB.OnEnter(LDB_ANCHOR)
+end
+
+local function EventHelper(self, event, ...)
+	if event == "PLAYER_ENTERING_WORLD" and IsInGuild() then
+		local _, online = GetNumGuildMembers()
+		Text:SetFormattedText(displayString, online)
+	else
+		Text:SetText(noGuildString)
+	end
 end
 
 ----------------------------
@@ -270,11 +250,12 @@ Stat:SetScript("OnEnter", function(self)
 	else
 		local _, panel, _, _ = E.DataTextTooltipAnchor(Text)	-- to properly place the tooltip
 		tooltip = LibQTip:Acquire("Stat", 7, "RIGHT", "RIGHT", "LEFT", "LEFT", "CENTER", "CENTER", "RIGHT")
+		self.tooltip = tooltip
 		tooltip:SetBackdropColor(0,0,0,1)
 		tooltip:SetHeaderFont(ssHeaderFont)
 		tooltip:SetFont(ssRegFont)
 		tooltip:SmartAnchorTo(panel)
-		tooltip:SetAutoHideDelay(0.1, self)
+		tooltip:SetAutoHideDelay(0.001, self)
 	end
 
 	------------------------
@@ -365,5 +346,27 @@ Stat:SetScript("OnEnter", function(self)
 	tooltip:Show()
 end)
 
+Stat:SetScript("OnLeave", function(self)
+	LibQTip:Release(self.tooltip)
+	self.tooltip = nil
+end)
+
+local DELAY = 15  --  Update every 15 seconds
+local elapsed = DELAY - 5
+
+Stat:SetScript("OnUpdate", function (self, el)
+	elapsed = elapsed + el
+
+	if elapsed >= DELAY then
+		elapsed = 0
+		if IsInGuild() then
+			local _, online = GetNumGuildMembers()
+			Text:SetFormattedText(displayString, online)
+		else
+			Text:SetText(noGuildString)
+		end
+	end
+end)
+
 Stat:RegisterEvent("PLAYER_ENTERING_WORLD")
-Stat:SetScript("OnEvent", Update)
+Stat:SetScript("OnEvent", EventHandler)
