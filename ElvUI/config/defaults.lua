@@ -235,6 +235,10 @@ DB["datatext"] = {
 	["localtime"] = true,                 -- set time to local time instead of server time.
 	["fontsize"] = 12,                     -- font size for panels.
 	["classcolor"] = false,
+	["recountraiddps"] = false,
+	["fsort"] = "TOONNAME",
+	["gsort"] = "TOONNAME",
+	["showbroadcast"] = true,
 }
 
 DB["chat"] = {

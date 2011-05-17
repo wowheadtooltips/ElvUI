@@ -1989,8 +1989,57 @@ function ElvuiConfig.GenerateOptionsInternal()
 						desc = "Show Raid DPS on the Recount data text instead of personal DPS.",
 						disabled = function() return db.datatext.recount == 0 end,
 					},
-					DataGroup = {
+					GuildFriend = {
 						order = 10,
+						type = "group",
+						name = "Friends/Guild Tooltip Settings",
+						guiInline = true,
+						args = {
+							gsort = {
+								order = 1,
+								type = "select",
+								name = "Guild Sort",
+								desc = "Method to sort the guild list.",
+								values = {
+									["TOONNAME"] = "Name",
+									["LEVEL"] = "Level",
+									["RANKINDEX"] = "Rank",
+									["ZONENAME"] = "Zone",
+									["revTOONNAME"] = "Name (Reverse)",
+									["revLEVEL"] = "Level (Reverse)",
+									["revRANKINDEX"] = "Rank (Reverse)",
+									["revZONENAME"] = "Zone (Reverse)",
+								},
+								disabled = function() return db.datatext.guild == 0 end,
+							},
+							fsort = {
+								order = 2,
+								type = "select",
+								name = "Friend Sort",
+								desc = "Method to sort the friends list.",
+								values = {
+									["TOONNAME"] = "Name",
+									["LEVEL"] = "Level",
+									["REALMNAME"] = "RealID Name",
+									["ZONENAME"] = "Zone",
+									["revTOONNAME"] = "Name (Reverse)",
+									["revLEVEL"] = "Level (Reverse)",
+									["revREALMNAME"] = "RealID Name (Reverse)",
+									["revZONENAME"] = "Zone (Reverse)",
+								},
+								disabled = function() return db.datatext.friend == 0 end,
+							},
+							showbroadcast = {
+								order = 3,
+								type = "toggle",
+								name = "Show RealID Broadcast",
+								desc = "Always show RealID broadcast.",
+								disabled = function() return db.datatext.friend == 0 end,
+							}
+						},
+					},
+					DataGroup = {
+						order = 11,
 						type = "group",
 						name = L["Text Positions"],
 						guiInline = true,

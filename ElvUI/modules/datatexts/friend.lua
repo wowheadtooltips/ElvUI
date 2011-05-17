@@ -130,12 +130,12 @@ local list_sort = {
 }
 
 local function SetRealIDSort(cell, sortsection)
-	if DB["RealIDSort"] == sortsection then
-		DB["RealIDSort"] = "rev" .. sortsection
+	if C["datatext"].fsort == sortsection then
+		C["datatext"].fsort = "rev" .. sortsection
 	else
-		DB["RealIDSort"] = sortsection
+		C["datatext"].fsort = sortsection
 	end
-	--LDB.OnEnter(LDB_ANCHOR)
+	FriendEnter(Stat)
 end
 
 local function EventHandler(self, event, ...)
@@ -193,8 +193,8 @@ local function Entry_OnMouseUp(frame, info, button)
 		end
 	elseif button == "RightButton" then
 		-- Expand RealID Broadcast
-		DB.expand_realID = not DB.expand_realID
-		LDB.OnEnter(LDB_ANCHOR)
+		C["datatext"].showbroadcast = not C["datatext"].showbroadcast
+		FriendEnter(Stat)
 	end
 end
 	
@@ -241,20 +241,20 @@ for token, localizedName in pairs(classes_male) do
 	CLASS_COLORS[localizedName] = format("%02x%02x%02x", color.r * 255, color.g * 255, color.b * 255) 
 end
 
-Stat:SetScript("OnEnter", function(self)
+function FriendEnter(self)
 	if InCombatLockdown() then return end
 
-	if LibQTip:IsAcquired("Stat") then
+	if LibQTip:IsAcquired("FriendList") then
 		tooltip:Clear()
 	else
 		local _, panel, _, _ = E.DataTextTooltipAnchor(Text)	-- to properly place the tooltip
-		tooltip = LibQTip:Acquire("Stat", 7, "RIGHT", "RIGHT", "LEFT", "LEFT", "CENTER", "CENTER", "RIGHT")
+		tooltip = LibQTip:Acquire("FriendList", 7, "RIGHT", "RIGHT", "LEFT", "LEFT", "CENTER", "CENTER", "RIGHT")
 		self.tooltip = tooltip
 		tooltip:SetBackdropColor(0,0,0,1)
 		tooltip:SetHeaderFont(ssHeaderFont)
 		tooltip:SetFont(ssRegFont)
 		tooltip:SmartAnchorTo(panel)
-		tooltip:SetAutoHideDelay(0.001, self)
+		tooltip:SetAutoHideDelay(0.1, self)
 	end
 
 	local line = tooltip:AddLine()
@@ -276,7 +276,6 @@ Stat:SetScript("OnEnter", function(self)
 		line = tooltip:SetCell(line, 3, _G.NAME)
 		tooltip:SetCellScript(line, 3, "OnMouseUp", SetRealIDSort, "TOONNAME")
 		line = tooltip:SetCell(line, 4, _G.BATTLENET_FRIEND)
-		tooltip:SetCellScript(line, 4, "OnMouseUp", SetRealIDSort, "REALID")
 		line = tooltip:SetCell(line, 5, _G.LOCATION_COLON)
 		tooltip:SetCellScript(line, 5, "OnMouseUp", SetRealIDSort, "ZONENAME")
 		line = tooltip:SetCell(line, 6, _G.FRIENDS_LIST_REALM)
@@ -333,12 +332,16 @@ Stat:SetScript("OnEnter", function(self)
 						})
 				end
 			end
-
-			sort(realid_table, list_sort["TOONNAME"])
+			
+			if not C["datatext"].fsort or C["datatext"].fsort == "" then
+				sort(realid_table, list_sort["TOONNAME"])
+			else
+				sort(realid_table, list_sort[C["datatext"].fsort])
+			end
 
 			for _, player in ipairs(realid_table) do
 				local broadcast_flag
-				if player["BROADCAST_TEXT"] ~= "" then
+				if C["datatext"].showbroadcast == true and player["BROADCAST_TEXT"] ~= "" then
 					broadcast_flag = " " .. BROADCAST_ICON
 				else
 					broadcast_flag = ""
@@ -366,7 +369,7 @@ Stat:SetScript("OnEnter", function(self)
 				line = tooltip:SetCell(line, 7, player["NOTE"])
 				tooltip:SetLineScript(line, "OnMouseUp", Entry_OnMouseUp, format("realid:%s:%s %s:%d", player["TOONNAME"], player["GIVENNAME"], player["SURNAME"], player["PRESENCEID"]))
 
-				if player["BROADCAST_TEXT"] ~= "" then
+				if C["datatext"].showbroadcast == true and player["BROADCAST_TEXT"] ~= "" then
 					line = tooltip:AddLine()
 					line = tooltip:SetCell(line, 1, BROADCAST_ICON .. " |cff7b8489" .. player["BROADCAST_TEXT"] .. "|r", "LEFT", 0)
 					tooltip:SetLineScript(line, "OnMouseUp", Entry_OnMouseUp, format("realid:%s:%s %s:%d", player["TOONNAME"], player["GIVENNAME"], player["SURNAME"], player["PRESENCEID"]))
@@ -398,8 +401,12 @@ Stat:SetScript("OnEnter", function(self)
 					NOTE = note
 					})
 			end
-
-			sort(friend_table, list_sort["TOONNAME"])
+			
+			if not C["datatext"].fsort or C["datatext"].fsort == "" then
+				sort(friend_table, list_sort["TOONNAME"])
+			else
+				sort(friend_table, list_sort[C["datatext"].fsort])
+			end
 
 			for _, player in ipairs(friend_table) do
 				line = tooltip:AddLine()
@@ -425,20 +432,21 @@ Stat:SetScript("OnEnter", function(self)
 	line = tooltip:AddLine()
 	tooltip:SetCell(line, 1, "|cffeda55fLeft-Click|r to open the friend panel.    |cffeda55fRight-Click|r to set a broadcast message.", "LEFT", 0)
 	line = tooltip:AddLine()
-	tooltip:SetCell(line, 1, "|cffeda55fClick|r a line to whisper a player.  |cffeda55fShift-Click|r a line to lookup a player.", "LEFT", 0)
+	tooltip:SetCell(line, 1, "|cffeda55fLeft-Click|r a line to whisper a player.  |cffeda55fRight-Click|r a line to expand broadcast message.", "LEFT", 0)
 	line = tooltip:AddLine()
-	tooltip:SetCell(line, 1, "|cffeda55fCtrl-Click|r a line to edit a note.    |cffeda55fAlt-Click|r a line to invite.", "LEFT", 0)
+	tooltip:SetCell(line, 1, "|cffeda55fCtrl-Click|r a line to edit a note.    |cffeda55fShift-Click|r a line to lookup a player.", "LEFT", 0)
 	line = tooltip:AddLine()
-	tooltip:SetCell(line, 1, "|cffeda55fClick|r a Header to sort it.", "LEFT", 0)
+	tooltip:SetCell(line, 1, "|cffeda55fAlt-Click|r a line to invite.    |cffeda55fClick|r a Header to sort it.", "LEFT", 0)
 
 	tooltip:UpdateScrolling()
 	tooltip:Show()	
-end)
+end
 
-Stat:SetScript("OnLeave", function(self)
+Stat:SetScript("OnEnter", FriendEnter)
+--[[Stat:SetScript("OnLeave", function(self)
 	LibQTip:Release(self.tooltip)
 	self.tooltip = nil
-end)
+end)]]
 
 local DELAY = 15  --  Update every 15 seconds
 local elapsed = DELAY - 5

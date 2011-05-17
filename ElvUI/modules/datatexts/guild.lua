@@ -67,15 +67,6 @@ local list_sort = {
 							return a["TOONNAME"] < b["TOONNAME"]
 						end
 					end,
-	REALMNAME	=	function(a, b)
-						if a["REALMNAME"] < b["REALMNAME"] then
-							return true
-						elseif a["REALMNAME"] > b["REALMNAME"] then
-							return false
-						else -- TOONNAME
-							return a["ZONENAME"] < b["ZONENAME"]
-						end
-					end,
 	revTOONNAME	=	function(a, b)
 						return a["TOONNAME"] > b["TOONNAME"]
 					end,
@@ -106,15 +97,6 @@ local list_sort = {
 							return a["TOONNAME"] < b["TOONNAME"]
 						end
 					end,
-	revREALMNAME	=	function(a, b)
-						if a["REALMNAME"] > b["REALMNAME"] then
-							return true
-						elseif a["REALMNAME"] < b["REALMNAME"] then
-							return false
-						else -- TOONNAME
-							return a["ZONENAME"] < b["ZONENAME"]
-						end
-					end
 }
 
 local Stat = CreateFrame("Frame")
@@ -150,12 +132,12 @@ local function inGroup(name)
 end
 
 local function SetGuildSort(cell, sortsection)
-	if DB["GuildSort"] == sortsection then
-		DB["GuildSort"] = "rev" .. sortsection
+	if C["datatext"].gsort == sortsection then
+		C["datatext"].gsort = "rev" .. sortsection
 	else
-		DB["GuildSort"] = sortsection
+		C["datatext"].gsort = sortsection
 	end
-	LDB.OnEnter(LDB_ANCHOR)
+	OnEnter(Stat)
 end
 
 local function EventHelper(self, event, ...)
@@ -213,6 +195,7 @@ local AWAY_ICON		= "|TInterface\\FriendsFrame\\StatusIcon-Away:18|t"
 local BUSY_ICON		= "|TInterface\\FriendsFrame\\StatusIcon-DnD:18|t"
 local MINIMIZE		= "|TInterface\\BUTTONS\\UI-PlusButton-Up:0|t"
 local BROADCAST_ICON = "|TInterface\\FriendsFrame\\BroadcastIcon:0|t"
+local MOBILE_ICON	= "|TInterface\\ChatFrame\\UI-ChatIcon-ArmoryChat:18|t"
 
 local FACTION_COLOR_HORDE = RED_FONT_COLOR_CODE
 local FACTION_COLOR_ALLIANCE = "|cff0070dd"
@@ -244,18 +227,20 @@ end
 Stat:SetScript("OnMouseUp", function() ToggleGuildFrame(1) end)
 
 -- build and show the tooltip!
-Stat:SetScript("OnEnter", function(self)
-	if LibQTip:IsAcquired("Stat") then
+function OnEnter(self)
+	if InCombatLockdown() then return end
+
+	if LibQTip:IsAcquired("GuildList") then
 		tooltip:Clear()
 	else
 		local _, panel, _, _ = E.DataTextTooltipAnchor(Text)	-- to properly place the tooltip
-		tooltip = LibQTip:Acquire("Stat", 7, "RIGHT", "RIGHT", "LEFT", "LEFT", "CENTER", "CENTER", "RIGHT")
+		tooltip = LibQTip:Acquire("GuildList", 7, "RIGHT", "RIGHT", "LEFT", "LEFT", "CENTER", "CENTER", "RIGHT")
 		self.tooltip = tooltip
 		tooltip:SetBackdropColor(0,0,0,1)
 		tooltip:SetHeaderFont(ssHeaderFont)
 		tooltip:SetFont(ssRegFont)
 		tooltip:SmartAnchorTo(panel)
-		tooltip:SetAutoHideDelay(0.001, self)
+		tooltip:SetAutoHideDelay(0.1, self)
 	end
 
 	------------------------
@@ -285,7 +270,7 @@ Stat:SetScript("OnEnter", function(self)
 		tooltip:AddSeparator()
 
 		for i = 1, GetNumGuildMembers() do
-			local toonName, rank, rankindex, level, class, zoneName, note, onote, connected, status = GetGuildRosterInfo(i)
+			local toonName, rank, rankindex, level, class, zoneName, note, onote, connected, status, classFileName, achievementPoints, achievementRank, isMobile = GetGuildRosterInfo(i)
 
 			if connected then
 				if note and note ~= '' then note="|cff00ff00["..note.."]|r" end
@@ -295,6 +280,9 @@ Stat:SetScript("OnEnter", function(self)
 					status = AWAY_ICON
 				elseif status == CHAT_FLAG_DND then
 					status = BUSY_ICON
+				elseif isMobile then
+					status = MOBILE_ICON
+					zoneName = "Remote Chat"
 				end
 
 				insert(guild_table, {
@@ -310,8 +298,12 @@ Stat:SetScript("OnEnter", function(self)
 				})
 			end
 		end
-
-		sort(guild_table, list_sort["TOONNAME"])
+		
+		if not C["datatext"].gsort then
+			sort(guild_table, list_sort["TOONNAME"])
+		else
+			sort(guild_table, list_sort[C["datatext"].gsort])
+		end
 
 		for _, player in ipairs(guild_table) do
 			line = tooltip:AddLine()
@@ -344,12 +336,13 @@ Stat:SetScript("OnEnter", function(self)
 
 	tooltip:UpdateScrolling()
 	tooltip:Show()
-end)
+end
 
-Stat:SetScript("OnLeave", function(self)
+Stat:SetScript("OnEnter", OnEnter)
+--[[Stat:SetScript("OnLeave", function(self)
 	LibQTip:Release(self.tooltip)
 	self.tooltip = nil
-end)
+end)]]
 
 local DELAY = 15  --  Update every 15 seconds
 local elapsed = DELAY - 5
