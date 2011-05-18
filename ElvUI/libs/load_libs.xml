@@ -2,4 +2,6 @@
 	<Script file="LibStub\LibStub.lua"/>
 	<Script file="CallbackHandler-1.0\CallbackHandler-1.0.lua"/>
 	<Include file="LibSharedMedia-3.0\lib.xml"/>
+	<Script file="LibQTip-1.0\LibQTip-1.0.lua"/>
+	<Script file="LibCrayon-3.0\LibCrayon-3.0.lua"/>
 </Ui>

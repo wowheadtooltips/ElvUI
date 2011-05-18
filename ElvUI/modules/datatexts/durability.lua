@@ -2,20 +2,17 @@
 -- DURABILITY
 --------------------------------------------------------------------
 local E, C, L, DB = unpack(select(2, ...)) -- Import Functions/Constants, Config, Locales
+local Crayon = LibStub:GetLibrary("LibCrayon-3.0")
 	
 if not C["datatext"].dur or C["datatext"].dur == 0 then return end
 
 local join = string.join
 local floor = math.floor
+local random = math.random
+local sort = table.sort
 
 local displayString = string.join("", DURABILITY, ": ", "%s%d%%|r")
 local tooltipString = "%d %%"
-local statusColors = {
-	"|cff0CD809",
-	"|cffE8DA0F",
-	"|cffFF9000",
-	"|cffD80909"
-}
 
 local Stat = CreateFrame("Frame")
 Stat:EnableMouse(true)
@@ -37,6 +34,7 @@ local current, max
 
 E.SetUpAnimGroup(DurabilityDataText)
 local function OnEvent(self)
+	-- local hexString = "|cff%s"
 	Total = 0
 	for i = 1, 11 do
 		if GetInventoryItemLink("player", L.Slots[i][1]) ~= nil then
@@ -47,20 +45,11 @@ local function OnEvent(self)
 			end
 		end
 	end
-	table.sort(L.Slots, function(a, b) return a[3] < b[3] end)
+	sort(L.Slots, function(a, b) return a[3] < b[3] end)
 
 	if Total > 0 then
 		percent = floor(L.Slots[1][3] * 100)
-		if percent <= 100 and percent >= 75 then
-			color = 1
-		elseif percent <= 74 and percent >= 50 then
-			color = 2
-		elseif percent <= 49 and percent >= 25 then
-			color = 3
-		else
-			color = 4
-		end
-		Text:SetFormattedText(displayString, statusColors[color], percent)
+		Text:SetFormattedText(displayString, format("|cff%s", Crayon:GetThresholdHexColor(L.Slots[1][3])), percent)
 		if floor(L.Slots[1][3]*100) <= 20 then
 			local int = -1
 			Stat:SetScript("OnUpdate", function(self, t)
@@ -90,6 +79,7 @@ Stat:SetScript("OnEnter", function()
 			if L.Slots[i][3] ~= 1000 then
 				green = L.Slots[i][3]*2
 				red = 1 - green
+				-- print(green); print(red);
 				GameTooltip:AddDoubleLine(L.Slots[i][2], format(tooltipString, floor(L.Slots[i][3]*100)), 1 ,1 , 1, red + 1, green, 0)
 			end
 		end
