@@ -2177,6 +2177,13 @@ function ElvuiConfig.GenerateOptionsInternal()
 								desc = "Show Recount DPS"..L["DATATEXT_POS"],
 								min = 0, max = 8, step = 1,
 							},
+							professor = {
+								order = 20,
+								type = "range",
+								name = "Professor",
+								desc = "Show Professor title tracking"..L["DATATEXT_POS"],
+								min = 0, max = 8, step = 1,
+							},
 						},
 					},
 				},

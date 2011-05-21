@@ -5,7 +5,6 @@ local E, C, L, DB = unpack(select(2, ...)) -- Import Functions/Constants, Config
 if not C["tooltip"].enable then return end
 
 local ElvuiTooltip = CreateFrame("Frame", nil, UIParent)
-
 local _G = getfenv(0)
 
 local GameTooltip, GameTooltipStatusBar = _G["GameTooltip"], _G["GameTooltipStatusBar"]
@@ -84,7 +83,7 @@ local function SetRightTooltipPos(self)
 	end
 end
 
-GameTooltip:HookScript("OnUpdate",function(self, ...)
+GameTooltip:HookScript("OnUpdate",function(self, elapsed)
 	if self:GetAnchorType() == "ANCHOR_CURSOR" then
 		local x, y = GetCursorPosition();
 		local effScale = self:GetEffectiveScale();
@@ -142,7 +141,7 @@ GameTooltipStatusBar:SetScript("OnValueChanged", function(self, value)
 
 	if not self.text then
 		self.text = self:CreateFontString(nil, "OVERLAY")
-		self.text:SetPoint("CENTER", GameTooltipStatusBar, 0, E.Scale(-3))
+		self.text:SetPoint("CENTER", GameTooltipStatusBar, 0, 0) --E.Scale(-3))
 		self.text:SetFont(C["media"].font, C["general"].fontscale, "THINOUTLINE")
 		self.text:Show()
 		if unit then
@@ -174,7 +173,7 @@ end)
 
 local healthBar = GameTooltipStatusBar
 healthBar:ClearAllPoints()
-healthBar:SetHeight(E.Scale(5))
+healthBar:SetHeight(E.Scale(10))
 healthBar:SetPoint("TOPLEFT", healthBar:GetParent(), "BOTTOMLEFT", E.Scale(2), E.Scale(-5))
 healthBar:SetPoint("TOPRIGHT", healthBar:GetParent(), "BOTTOMRIGHT", -E.Scale(2), E.Scale(-5))
 healthBar:SetStatusBarTexture(C["media"].normTex)
@@ -349,6 +348,9 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
 	end
 	
 	if C["tooltip"].whotargetting == true then token = unit AddTargetedBy() end
+	
+	-- show talents?
+	--if UnitIsPlayer(unit) and C["tooltip"].showtalents == true then AddTalents(unit) end
 		
 	
 	-- Sometimes this wasn't getting reset, the fact a cleanup isn't performed at this point, now that it was moved to "OnTooltipCleared" is very bad, so this is a fix
@@ -410,6 +412,7 @@ local SetStyle = function(self)
 end
 
 ElvuiTooltip:RegisterEvent("PLAYER_ENTERING_WORLD")
+--ElvuiTooltip:RegisterEvent("INSPECT_READY")
 ElvuiTooltip:SetScript("OnEvent", function(self, event, addon)
 	for _, tt in pairs(Tooltips) do
 		tt:HookScript("OnShow", SetStyle)
@@ -429,7 +432,7 @@ ElvuiTooltip:SetScript("OnEvent", function(self, event, addon)
 	end)
 		
 	self:UnregisterEvent("PLAYER_ENTERING_WORLD")
-	self:SetScript("OnEvent", nil)
+	--self:SetScript("OnEvent", nil)
 	
 	-- Hide tooltips in combat for actions, pet actions and shapeshift
 	if C["tooltip"].hidebuttons == true then

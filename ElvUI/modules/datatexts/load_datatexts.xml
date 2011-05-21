@@ -21,4 +21,5 @@
 	<Script file="crit.lua"/>
 	<Script file="regen.lua"/>
 	<Script file="recount.lua"/>
+	<Script file="professor.lua"/>
 </Ui>	

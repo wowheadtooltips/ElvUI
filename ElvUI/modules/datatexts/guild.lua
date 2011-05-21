@@ -335,6 +335,17 @@ function OnEnter(self)
 	tooltip:SetCell(line, 1, "|cffeda55fAlt-Click|r a line to invite.    |cffeda55fClick|r a Header to sort it.", "LEFT", 0)
 
 	tooltip:UpdateScrolling()
+	
+	-- set the look of the tooltip
+	local noscalemult = E.mult * C["general"].uiscale
+	tooltip:SetBackdrop({
+	  bgFile = C["media"].blank, 
+	  edgeFile = C["media"].blank, 
+	  tile = false, tileSize = 0, edgeSize = noscalemult, 
+	  insets = { left = -noscalemult, right = -noscalemult, top = -noscalemult, bottom = -noscalemult}
+	})
+	tooltip:SetBackdropColor(unpack(C.media.backdropfadecolor))
+	tooltip:SetBackdropBorderColor(unpack(C.media.bordercolor))
 	tooltip:Show()
 end
 
