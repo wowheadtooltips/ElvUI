@@ -15,6 +15,7 @@ local gsub			= string.gsub
 local sort			= table.sort
 local insert		= table.insert
 local ceil			= math.ceil
+local sizeof		= table.getn
 local displayString = join("", GUILD, ": ", E.ValColor, "%d|r")
 local noGuildString = join("", E.ValColor, L.datatext_noguild)
 
@@ -249,25 +250,6 @@ function OnEnter(self)
 
 	if IsInGuild() then
 		local guild_table = {}
-		
-		-- Header for Guild
-		local ssGuildName = GetGuildInfo("player")
-		line = tooltip:AddLine()
-		tooltip:SetCell(line, 1, "|cffffffff" .. ssGuildName .."|r", "LEFT", 3)
-
-		line = tooltip:AddLine()
-		tooltip:SetCell(line, 1, "|cff00ff00"..GetGuildRosterMOTD().."|r", "LEFT", 0, nil, nil, nil, 100)
-
-		line = tooltip:AddHeader()
-		line = tooltip:SetCell(line, 1, "  ")
-		tooltip:SetCellScript(line, 1, "OnMouseUp", SetGuildSort, "LEVEL")
-		line = tooltip:SetCell(line, 3, _G.NAME)
-		tooltip:SetCellScript(line, 3, "OnMouseUp", SetGuildSort, "TOONNAME")
-		line = tooltip:SetCell(line, 5, _G.ZONE)
-		tooltip:SetCellScript(line, 5, "OnMouseUp", SetGuildSort, "ZONENAME")
-		line = tooltip:SetCell(line, 6, _G.RANK)
-		tooltip:SetCellScript(line, 6, "OnMouseUp", SetGuildSort, "RANKINDEX")
-		tooltip:AddSeparator()
 
 		for i = 1, GetNumGuildMembers() do
 			local toonName, rank, rankindex, level, class, zoneName, note, onote, connected, status, classFileName, achievementPoints, achievementRank, isMobile = GetGuildRosterInfo(i)
@@ -298,6 +280,26 @@ function OnEnter(self)
 				})
 			end
 		end
+
+		-- Header for Guild
+		local ssGuildName = GetGuildInfo("player")
+		line = tooltip:AddLine()
+		tooltip:SetCell(line, 1, "|cffffffff" .. ssGuildName .."|r", "LEFT", 3)
+		tooltip:SetCell(line, 7, "|cffffffff" .. sizeof(guild_table) .. "/" .. GetNumGuildMembers() .. "|r", "RIGHT")
+
+		line = tooltip:AddLine()
+		tooltip:SetCell(line, 1, "|cff00ff00"..GetGuildRosterMOTD().."|r", "LEFT", 0, nil, nil, nil, 100)
+
+		line = tooltip:AddHeader()
+		line = tooltip:SetCell(line, 1, "  ")
+		tooltip:SetCellScript(line, 1, "OnMouseUp", SetGuildSort, "LEVEL")
+		line = tooltip:SetCell(line, 3, _G.NAME)
+		tooltip:SetCellScript(line, 3, "OnMouseUp", SetGuildSort, "TOONNAME")
+		line = tooltip:SetCell(line, 5, _G.ZONE)
+		tooltip:SetCellScript(line, 5, "OnMouseUp", SetGuildSort, "ZONENAME")
+		line = tooltip:SetCell(line, 6, _G.RANK)
+		tooltip:SetCellScript(line, 6, "OnMouseUp", SetGuildSort, "RANKINDEX")
+		tooltip:AddSeparator()
 		
 		if not C["datatext"].gsort then
 			sort(guild_table, list_sort["TOONNAME"])

@@ -33,6 +33,7 @@ local format		= string.format
 local split			= string.split
 local sort			= table.sort
 local insert		= table.insert
+local sizeof		= table.getn
 
 -- for datatext display
 local displayString = join("", "%s: ", E.ValColor, "%d|r")

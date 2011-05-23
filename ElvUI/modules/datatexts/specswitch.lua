@@ -87,6 +87,10 @@ Stat:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 Stat:SetScript("OnEvent", OnEvent)
 Stat:SetScript("OnUpdate", Update)
 
-Stat:SetScript("OnMouseDown", function()
-	SetActiveTalentGroup(active == 1 and 2 or 1)
+Stat:SetScript("OnMouseDown", function(self, button)
+	if button == "LeftButton" then
+		SetActiveTalentGroup(active == 1 and 2 or 1)
+	elseif button == "RightButton" then
+		ToggleTalentFrame()
+	end
 end)

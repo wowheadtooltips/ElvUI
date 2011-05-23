@@ -13,9 +13,9 @@ local format = string.format
 local insert = table.insert
 
 local tooltip
-local displayString = join("", "%s: ", E.ValColor, "%d|r")
+local displayString = "%s: |cff%s%s/20|r"
 local entryString = "%s%s|r"
-local iconString = "|T%s:0:0:0:0:64:64:0:38:0:38|t"
+local iconString = "|T%s:18:18:0:1:128:128:4:60:4:60|t"
 local artifactString = "%s%s/%s %s|r"
 local percentString = "|cff%s(%d%%)|r"
 local totalString = "|cff2EEA19Total:|r %s%d|r"
@@ -198,10 +198,14 @@ end
 
 function Professor:GetCompletedRares()
 	local total = 0
-	for id, race in ipairs(self.races) do
-		if race.completedRare > 0 then total = total + race.completedRare end
+	if not Professor:HasArchaeology() then
+		return 0
+	else
+		for id, race in ipairs(self.races) do
+			if race.completedRare > 0 then total = total + race.completedRare end
+		end
+		return total
 	end
-	return total
 end
 
 function Professor:GetRaceDetails(id)
@@ -211,25 +215,73 @@ function Professor:GetRaceDetails(id)
 	for icon, artifact in pairs(race.artifacts) do
 		local spellName, _, _, _, _, _, _, _, _ = GetSpellInfo(artifact.spellId)
 		if artifact.solves == 0 then
-            insert(incomplete, "|cffaa3333" .. spellName .. "|r")
+            insert(incomplete, artifact.spellId .. ":|cffaa3333" .. spellName .. "|r")
         elseif artifact.rare then
-            insert(rare, "|cff66ccff" .. spellName .. "|r")
+            insert(rare, artifact.spellId .. ":|cff66ccff" .. spellName .. "|r")
         else
-            insert(therest, "|cff33aa33" .. spellName .. "|r:" .. artifact.solves .. "x" )
+            insert(therest, artifact.spellId .. ":|cff33aa33" .. spellName .. "|r:" .. artifact.solves .. "x" )
         end
 	end
 	
 	return incomplete, rare, therest
 end
 
+-- Returns true if the player has the archaeology secondary skill
+function Professor:HasArchaeology()
+	local _, _, arch = GetProfessions()
+	return (arch and true or false)
+end
+
+function Professor:PrintArtifactDetailed(spellid)
+	local link = GetSpellLink(spellid)
+	print("|cff00ff00[Spell Link]|r " .. link)
+end
+
+-- print detailed race artifacts
+function Professor:PrintDetailed(raceId)
+    local race = self.races[raceId]
+
+    print()
+    print( race:GetString() )
+
+    local incomplete, rare, therest = {}, {}, {}
+    for icon, artifact in pairs(race.artifacts) do
+
+        local link = GetSpellLink(artifact.spellId)
+
+        if artifact.solves == 0 then
+            table.insert(incomplete, "  |cffaa3333×|r  " .. link )
+        elseif artifact.rare then
+            table.insert(rare, "  |cff3333aa+|r  " .. link )
+        else
+            table.insert(therest, "  |cff33aa33+|r  " .. link .. self.COLORS.text .. "×" .. artifact.solves .. "|r" )
+        end
+    end
+
+    for _, artifactString in ipairs(incomplete) do print(artifactString) end
+    for _, artifactString in ipairs(rare) do print(artifactString) end
+    for _, artifactString in ipairs(therest) do print(artifactString) end
+end
+
+
 -- click tooltip line
 local function Entry_Click(frame, info, button)
-	if Professor.detail == nil and info > 0 then 
-		Professor.detail = info
-		ProfessorEnter(Professor)
-	elseif Professor.detail ~= nil then
-		Professor.detail = nil
-		ProfessorEnter(Professor)
+	local linetype, id = split(":", info)
+	if linetype == "race" then
+		if button == "LeftButton" then
+			if Professor.detail == nil and tonumber(id) > 0 then 
+				Professor.detail = tonumber(id)
+				ProfessorEnter(Professor)
+			elseif Professor.detail ~= nil then
+				Professor.detail = nil
+				ProfessorEnter(Professor)
+			end
+		elseif button == "RightButton" then
+			Professor:PrintDetailed(tonumber(id))
+		end
+	elseif linetype == "artifact" then
+		if id == 0 then return end
+		Professor:PrintArtifactDetailed(tonumber(id))
 	end
 end
 
@@ -253,65 +305,84 @@ function ProfessorEnter(self)
 		tooltip:SetAutoHideDelay(0.1, self)
 	end
 	
-	-- add the header
-	line = tooltip:AddLine()
-	tooltip:SetCell(line, 1, "|cffffffffProfessor Title Tracking|r", "LEFT", 3)
-	line = tooltip:AddHeader()
-	line = tooltip:SetCell(line, 1, " ")
-	line = tooltip:SetCell(line, 2, "Race")
-	line = tooltip:SetCell(line, 3, "Common")
-	line = tooltip:SetCell(line, 4, "Rare")
-	line = tooltip:SetCell(line, 5, "Total")
-	tooltip:AddSeparator()
-	
-	-- put each race
-	for id, race in ipairs(self.races) do
-		if race.totalCommon > 0 or self.totalRare > 0 then
-			grandTotal = grandTotal + tonumber(race.totalSolves)
-			
-			local commonPercent = race.completedCommon / race.totalCommon
-			local rarePercent = race.completedRare / race.totalRare
-			local commonPercentString = format(percentString, Crayon:GetThresholdHexColor(commonPercent), floor(commonPercent * 100))
-			local rarePercentString = format(percentString, Crayon:GetThresholdHexColor(rarePercent), floor(rarePercent * 100))
-			
-			line = tooltip:AddLine()
-			line = tooltip:SetCell(line, 1, format(iconString, race.icon))
-			line = tooltip:SetCell(line, 2, format(entryString, _G['ORANGE_FONT_COLOR_CODE'], race.name))
-			line = tooltip:SetCell(line, 3, format(artifactString, self.COLORS.common, race.completedCommon, race.totalCommon, commonPercentString))
-			line = tooltip:SetCell(line, 4, format(artifactString, self.COLORS.rare, race.completedRare, race.totalRare, rarePercentString))
-			line = tooltip:SetCell(line, 5, format(entryString, self.COLORS.text, race.totalSolves))
-			tooltip:SetLineScript(line, "OnMouseUp", Entry_Click, id)
-			
-			-- print detailed information
-			if Professor.detail == id then
-				local incomplete, rare, therest = Professor:GetRaceDetails(id)
-				for _, aString in ipairs(incomplete) do
-					line = tooltip:AddLine()
-					line = tooltip:SetCell(line, 2, aString, ssRegFont, "LEFT", 4)
-					tooltip:SetLineScript(line, "OnMouseUp", Entry_Click, id)
-				end
-				for _, aString in ipairs(rare) do
-					line = tooltip:AddLine()
-					line = tooltip:SetCell(line, 2, aString, ssRegFont, "LEFT", 4)
-					tooltip:SetLineScript(line, "OnMouseUp", Entry_Click, id)
-				end
-				for _, aString in ipairs(therest) do
-					local commonSolved, timesSolved = split(":", aString)
-					line = tooltip:AddLine()
-					line = tooltip:SetCell(line, 2, commonSolved, ssRegFont, "LEFT", 3)
-					line = tooltip:SetCell(line, 5, format(entryString, self.COLORS.text, timesSolved))
-					tooltip:SetLineScript(line, "OnMouseUp", Entry_Click, id)
+	if Professor:HasArchaeology() then
+		-- add the header
+		line = tooltip:AddLine()
+		tooltip:SetCell(line, 1, "|cffffffffProfessor Title Tracking|r", "LEFT", 3)
+		line = tooltip:AddHeader()
+		line = tooltip:SetCell(line, 1, " ")
+		line = tooltip:SetCell(line, 2, "Race")
+		line = tooltip:SetCell(line, 3, "Common")
+		line = tooltip:SetCell(line, 4, "Rare")
+		line = tooltip:SetCell(line, 5, "Total")
+		tooltip:AddSeparator()
+		
+		-- put each race
+		for id, race in ipairs(self.races) do
+			if race.totalCommon > 0 or self.totalRare > 0 then
+				grandTotal = grandTotal + tonumber(race.totalSolves)
+				
+				local commonPercent = race.completedCommon / race.totalCommon
+				local rarePercent = race.completedRare / race.totalRare
+				local commonPercentString = format(percentString, Crayon:GetThresholdHexColor(commonPercent), floor(commonPercent * 100))
+				local rarePercentString = format(percentString, Crayon:GetThresholdHexColor(rarePercent), floor(rarePercent * 100))
+				
+				line = tooltip:AddLine()
+				line = tooltip:SetCell(line, 1, format(iconString, race.icon))
+				line = tooltip:SetCell(line, 2, format(entryString, _G['ORANGE_FONT_COLOR_CODE'], race.name))
+				line = tooltip:SetCell(line, 3, format(artifactString, self.COLORS.common, race.completedCommon, race.totalCommon, commonPercentString))
+				line = tooltip:SetCell(line, 4, format(artifactString, self.COLORS.rare, race.completedRare, race.totalRare, rarePercentString))
+				line = tooltip:SetCell(line, 5, format(entryString, self.COLORS.text, race.totalSolves))
+				tooltip:SetLineScript(line, "OnMouseUp", Entry_Click, "race:" .. id)
+				
+				-- print detailed information
+				if Professor.detail == id then
+					local incomplete, rare, therest = Professor:GetRaceDetails(id)
+					for _, aString in ipairs(incomplete) do
+						local spellid, spellname = split(":", aString)
+						line = tooltip:AddLine()
+						line = tooltip:SetCell(line, 2, spellname, ssRegFont, "LEFT", 4)
+						tooltip:SetLineScript(line, "OnMouseUp", Entry_Click, "artifact:" .. spellid)
+					end
+					for _, aString in ipairs(rare) do
+						local spellid, spellname = split(":", aString)
+						line = tooltip:AddLine()
+						line = tooltip:SetCell(line, 2, spellname, ssRegFont, "LEFT", 4)
+						tooltip:SetLineScript(line, "OnMouseUp", Entry_Click, "artifact:" .. spellid)
+					end
+					for _, aString in ipairs(therest) do
+						local spellid, commonSolved, timesSolved = split(":", aString)
+						line = tooltip:AddLine()
+						line = tooltip:SetCell(line, 2, commonSolved, ssRegFont, "LEFT", 3)
+						line = tooltip:SetCell(line, 5, format(entryString, self.COLORS.text, timesSolved))
+						tooltip:SetLineScript(line, "OnMouseUp", Entry_Click, "artifact:" .. spellid)
+					end
 				end
 			end
 		end
+		
+		-- add the total
+		if grandTotal > 0 then
+			line = tooltip:AddLine()
+			tooltip:SetCell(line, 4, format(totalString, self.COLORS.common, grandTotal), ssRegFont, "RIGHT", 2)
+		end
+	else
+		tooltip:AddLine("|cffff0000Archaeology Not Found!")
 	end
 	
-	-- add the total
-	if grandTotal > 0 then
-		tooltip:AddSeparator()
-		line = tooltip:AddLine()
-		tooltip:SetCell(line, 4, format(totalString, self.COLORS.common, grandTotal), ssRegFont, "RIGHT", 2)
-	end
+	------------------
+	--  HINT HINT!  --
+	------------------
+	line = tooltip:AddLine()
+	tooltip:SetCell(line, 1, "Hint:", "LEFT", 3)
+	line = tooltip:AddLine()
+	tooltip:SetCell(line, 1, "|cffeda55fClick|r to open the Archaeology panel.", "LEFT", 0)
+	line = tooltip:AddLine()
+	tooltip:SetCell(line, 1, "|cffeda55fLeft-Click|r a race to toggle detailed tooltip information.", "LEFT", 0)
+	line = tooltip:AddLine()
+	tooltip:SetCell(line, 1, "|cffeda55fRight-Click|r a race to print detailed artifact information.", "LEFT", 0)
+	line = tooltip:AddLine()
+	tooltip:SetCell(line, 1, "|cffeda55fClick|r an artifact to print artifact information.", "LEFT", 0)
 
 	tooltip:UpdateScrolling()
 	-- set the look of the tooltip
@@ -335,8 +406,28 @@ Professor:SetScript("OnUpdate", function(self, el)
 	if elapsed >= DELAY then
 		elapsed = 0
 		self:UpdateHistory()
-		Text:SetFormattedText(displayString, "Rares", self:GetCompletedRares())
+		local completedRares = self:GetCompletedRares()
+		Text:SetFormattedText(displayString, "Rares", Crayon:GetThresholdHexColor(completedRares / 20), completedRares)
 		Professor:SetAllPoints(Text)
+	end
+end)
+
+-- click event
+Professor:SetScript("OnMouseUp", function(self, button)
+	if button == "LeftButton" then
+		-- attempt to open the archaeology frame
+		if IsAddOnLoaded("Blizzard_ArchaeologyUI") then
+			ShowUIPanel(ArchaeologyFrame)
+		else
+			local loaded, reason = LoadAddOn("Blizzard_ArchaeologyUI")
+			if loaded then
+				ShowUIPanel(ArchaeologyFrame)
+			else
+				DEFAULT_CHAT_WINDOW:AddMessage("|cffff0000Failed to open Archaeology frame, try opening manually.")
+			end
+		end
+	elseif button == "RightButton" then
+	
 	end
 end)
 
@@ -359,7 +450,9 @@ Professor:SetScript("OnEvent", function(self, event, ...)
 			self:UpdateHistory()
 			
 			-- set the datatext text
-			Text:SetFormattedText(displayString, "Rares", self:GetCompletedRares())
+			local completedRares = self:GetCompletedRares()
+			Text:SetFormattedText(displayString, "Rares", Crayon:GetThresholdHexColor(completedRares / 20), completedRares)
+			Professor:SetAllPoints(Text)
 		end
 		
 	end

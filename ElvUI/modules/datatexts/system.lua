@@ -111,7 +111,15 @@ local function Update(self, t)
 		int2 = 1
 	end
 end
-Stat:SetScript("OnMouseDown", function(self, button) collectgarbage("collect") Update(Stat, 20) end)
+Stat:SetScript("OnMouseDown", function(self, button) 
+	if button == "LeftButton" then
+		print("|cffffff00[ElvUI]|r Garbage Collection Completed")
+		collectgarbage("collect")
+		Update(Stat, 20)
+	elseif button == "RightButton" then
+		ReloadUI()
+	end
+end)
 Stat:SetScript("OnEnter", function(self)
 	local bandwidth = GetAvailableBandwidth()
 	local home_latency = select(3, GetNetStats()) 
