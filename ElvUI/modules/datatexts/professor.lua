@@ -18,7 +18,8 @@ local entryString = "%s%s|r"
 local iconString = "|T%s:18:18:0:1:128:128:4:60:4:60|t"
 local artifactString = "%s%s/%s %s|r"
 local percentString = "|cff%s(%d%%)|r"
-local totalString = "|cff2EEA19Total:|r %s%d|r"
+local totalString = "|cffffff00%d|r"
+local spellLink = nil
 
 if not C["datatext"].professor or C["datatext"].professor == 0 then return end
 
@@ -33,6 +34,34 @@ Text:SetShadowColor(0, 0, 0, 0.4)
 Text:SetShadowOffset(E.mult, -E.mult)
 E.PP(C["datatext"].professor, Text)
 Professor:SetAllPoints(Text)
+
+-- create a popup
+StaticPopupDialogs.ARTIFACT_WHISPER_INFO = {
+	text = "Who to whisper?",
+	button1 = ACCEPT,
+	button2 = CANCEL,
+	hasEditBox = 1,
+	editBoxWidth = 250,
+	maxLetters = 12,
+	OnAccept = function(self)
+		local whisper = self.editBox:GetText()
+		SendChatMessage(spellLink, "WHISPER", nil, whisper)
+		self:Hide()
+	end,
+	OnShow = function(self) self.editBox:SetFocus() end,
+	OnHide = ChatEdit_FocusActiveWindow,
+	EditBoxOnEnterPressed = function(self)
+		local whisper = self:GetText()
+		SendChatMessage(spellLink, "WHISPER", nil, whisper)
+		self:GetParent():Hide()
+	end,
+	EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+	timeout = 0,
+	exclusive = 1,
+	whileDead = 1,
+	hideOnEscape = 1
+}
+
 
 -------------------------------------------------------------------------------
 -- Font definitions for the tooltip.
@@ -232,11 +261,6 @@ function Professor:HasArchaeology()
 	return (arch and true or false)
 end
 
-function Professor:PrintArtifactDetailed(spellid)
-	local link = GetSpellLink(spellid)
-	print("|cff00ff00[Spell Link]|r " .. link)
-end
-
 -- print detailed race artifacts
 function Professor:PrintDetailed(raceId)
     local race = self.races[raceId]
@@ -263,10 +287,22 @@ function Professor:PrintDetailed(raceId)
     for _, artifactString in ipairs(therest) do print(artifactString) end
 end
 
+function Professor:PrintArtifactDetailed(spellid, chat, target)
+	local link = GetSpellLink(spellid)
+	if chat == nil then
+		print("|cff00ff00[Spell Link]|r " .. link)
+	elseif chat == "guild" then
+		SendChatMessage(link, "GUILD")
+	elseif chat == "whisper" then
+		-- no need to check target's validity, already done
+		SendChatMessage(link, "WHISPER", nil, target)
+	end
+end
 
 -- click tooltip line
 local function Entry_Click(frame, info, button)
 	local linetype, id = split(":", info)
+	if id == 0 then return end
 	if linetype == "race" then
 		if button == "LeftButton" then
 			if Professor.detail == nil and tonumber(id) > 0 then 
@@ -280,16 +316,34 @@ local function Entry_Click(frame, info, button)
 			Professor:PrintDetailed(tonumber(id))
 		end
 	elseif linetype == "artifact" then
-		if id == 0 then return end
-		Professor:PrintArtifactDetailed(tonumber(id))
+		if IsShiftKeyDown() then
+			local target = UnitName("target")
+			if not target or target == "" then 
+				-- no target
+				print("|cffff0000No Target Selected|r")
+				return
+			end
+			Professor:PrintArtifactDetailed(tonumber(id), "whisper", target)
+		elseif IsControlKeyDown() then
+			local link = GetSpellLink(tonumber(id))
+			if not link then return end
+			spellLink = link
+			StaticPopup_Show("ARTIFACT_WHISPER_INFO")
+		else
+			if button == "LeftButton" then
+				Professor:PrintArtifactDetailed(tonumber(id), nil, nil)
+			elseif button == "RightButton" then
+				Professor:PrintArtifactDetailed(tonumber(id), "guild", nil)
+			end
+		end
 	end
 end
 
 -- tooltip generator
 function ProfessorEnter(self)
 	local noscalemult = E.mult * C["general"].uiscale
-	local grandTotal = 0
-	local commonPercent, rarePercent, totalPercent = "", "", ""
+	local grandTotal, commonSolvedTotal, rareSolvedTotal = 0, 0, 0
+	local commonTotal, rareTotal = 0, 0
 	if InCombatLockdown() then return end
 	
 	if LibQTip:IsAcquired("ProfessorTip") then
@@ -320,7 +374,12 @@ function ProfessorEnter(self)
 		-- put each race
 		for id, race in ipairs(self.races) do
 			if race.totalCommon > 0 or self.totalRare > 0 then
+				-- for calculating totals
 				grandTotal = grandTotal + tonumber(race.totalSolves)
+				commonSolvedTotal = commonSolvedTotal + tonumber(race.completedCommon)
+				rareSolvedTotal = rareSolvedTotal + tonumber(race.completedRare)
+				commonTotal = commonTotal + tonumber(race.totalCommon)
+				rareTotal = rareTotal + tonumber(race.totalRare)
 				
 				local commonPercent = race.completedCommon / race.totalCommon
 				local rarePercent = race.completedRare / race.totalRare
@@ -361,11 +420,18 @@ function ProfessorEnter(self)
 			end
 		end
 		
-		-- add the total
-		if grandTotal > 0 then
-			line = tooltip:AddLine()
-			tooltip:SetCell(line, 4, format(totalString, self.COLORS.common, grandTotal), ssRegFont, "RIGHT", 2)
-		end
+		tooltip:AddSeparator()
+		
+		-- calculate percentages for totals
+		local commonTotalPercent = commonSolvedTotal / commonTotal
+		local rareTotalPercent = rareSolvedTotal / rareTotal
+		local commonTotalPercentString = format(percentString, Crayon:GetThresholdHexColor(commonTotalPercent), floor(commonTotalPercent * 100))
+		local rareTotalPercentString = format(percentString, Crayon:GetThresholdHexColor(rareTotalPercent), floor(rareTotalPercent * 100))
+		line = tooltip:AddLine()
+		tooltip:SetCell(line, 2, format(entryString, _G['ORANGE_FONT_COLOR_CODE'], "Totals"))
+		tooltip:SetCell(line, 3, format(artifactString, self.COLORS.common, commonSolvedTotal, commonTotal, commonTotalPercentString))
+		tooltip:SetCell(line, 4, format(artifactString, self.COLORS.rare, rareSolvedTotal, rareTotal, rareTotalPercentString))
+		tooltip:SetCell(line, 5, format(entryString, self.COLORS.text, grandTotal))
 	else
 		tooltip:AddLine("|cffff0000Archaeology Not Found!")
 	end
@@ -382,7 +448,13 @@ function ProfessorEnter(self)
 	line = tooltip:AddLine()
 	tooltip:SetCell(line, 1, "|cffeda55fRight-Click|r a race to print detailed artifact information.", "LEFT", 0)
 	line = tooltip:AddLine()
-	tooltip:SetCell(line, 1, "|cffeda55fClick|r an artifact to print artifact information.", "LEFT", 0)
+	tooltip:SetCell(line, 1, "|cffeda55fLeft-Click|r an artifact to print artifact information.", "LEFT", 0)
+	line = tooltip:AddLine()
+	tooltip:SetCell(line, 1, "|cffeda55fRight-Click|r an artifact to print artifact information in guild chat.", "LEFT", 0)
+	line = tooltip:AddLine()
+	tooltip:SetCell(line, 1, "|cffeda55fShift-Click|r an artifact to whisper artifact information to your target.", "LEFT", 0)
+	line = tooltip:AddLine()
+	tooltip:SetCell(line, 1, "|cffeda55fCtrl-Click|r an artifact to whisper artifact information to a specific person.", "LEFT", 0)
 
 	tooltip:UpdateScrolling()
 	-- set the look of the tooltip

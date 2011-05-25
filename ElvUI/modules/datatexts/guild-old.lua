@@ -1,8 +1,7 @@
 --------------------------------------------------------------------
 -- GUILD ROSTER
 --------------------------------------------------------------------
-local E, C, L, DB = unpack(select(2, ...)) 	-- Import Functions/Constants, Config, Locales
-local QTip = LibStub('LibQTip-1.0')		-- For Improved Tooltip functionality
+local E, C, L, DB = unpack(select(2, ...)) -- Import Functions/Constants, Config, Locales
 
 if not C["datatext"].guild or C["datatext"].guild == 0 then return end
 
@@ -22,7 +21,7 @@ local guildInfoString = "%s [%d]"
 local guildInfoString2 = join("", GUILD, ": %d/%d")
 local guildMotDString = "%s |cffaaaaaa- |cffffffff%s"
 local levelNameString = "|cff%02x%02x%02x%d|r |cff%02x%02x%02x%s|r %s"
-local levelNameStatusString = "|cff%02x%02x%02x%d|r %s %s |cff00A1FF(%s)|r"
+local levelNameStatusString = "|cff%02x%02x%02x%d|r %s %s"
 local nameRankString = "%s |cff999999-|cffffffff %s"
 local guildXpCurrentString = gsub(join("", E.RGBToHex(ttsubh.r, ttsubh.g, ttsubh.b), GUILD_EXPERIENCE_CURRENT), ": ", ":|r |cffffffff", 1)
 local guildXpDailyString = gsub(join("", E.RGBToHex(ttsubh.r, ttsubh.g, ttsubh.b), GUILD_EXPERIENCE_DAILY), ": ", ":|r |cffffffff", 1)
@@ -59,18 +58,13 @@ end
 
 local function BuildGuildTable()
 	wipe(guildTable)
-	local name, rank, level, zone, note, officernote, connected, status, class, achievementPoints, achievementRank, isMobile
+	local name, rank, level, zone, note, officernote, connected, status, class
 	local count = 0
 	for i = 1, GetNumGuildMembers() do
-		--name, rank, rankIndex, level, _, zone, note, officernote, connected, status, class = GetGuildRosterInfo(i)
-		name, rank, rankIndex, level, _, zone, note, officernote, connected, status, class, achievementPoints, achievementRank, isMobile = GetGuildRosterInfo(i)
+		name, rank, rankIndex, level, _, zone, note, officernote, connected, status, class = GetGuildRosterInfo(i)
 		-- we are only interested in online members
 		if connected then 
 			count = count + 1
-			if isMobile then
-				status = "|cffff0000[Mobile]"
-				zone = "Remote Chat"
-			end
 			guildTable[count] = { name, rank, level, zone, note, officernote, connected, status, class, rankIndex }
 		end
 	end
@@ -163,7 +157,7 @@ Stat:SetScript("OnMouseUp", function(self, btn)
 
 	for i = 1, #guildTable do
 		info = guildTable[i]
-		if info[7] then
+		if info[7] and info[1] ~= E.myname then
 			local classc, levelc = (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS)[info[9]], GetQuestDifficultyColor(info[3])
 
 			if UnitInParty(info[1]) or UnitInRaid(info[1]) then
@@ -238,7 +232,7 @@ Stat:SetScript("OnEnter", function(self)
 			end
 
 			info = guildTable[i]
-			if info[7] then
+			if info[7] and info[1] ~= E.myname then
 				if GetRealZoneText() == info[4] then zonec = activezone else zonec = inactivezone end
 				classc, levelc = (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS)[info[9]], GetQuestDifficultyColor(info[3])
 				
@@ -247,16 +241,12 @@ Stat:SetScript("OnEnter", function(self)
 					if info[5] ~= "" then GameTooltip:AddLine(format(noteString, info[5]), ttsubh.r, ttsubh.g, ttsubh.b, 1) end
 					if info[6] ~= "" then GameTooltip:AddLine(format(officerNoteString, info[6]), ttoff.r, ttoff.g, ttoff.b, 1) end
 				else
-					GameTooltip:AddDoubleLine(format(levelNameStatusString, levelc.r*255, levelc.g*255, levelc.b*255, info[3], info[1], info[8], info[2]), info[4], classc.r,classc.g,classc.b, zonec.r,zonec.g,zonec.b)
-					--GameTooltip:AddDoubleLine(format(levelNameStatusString, levelc.r*255, levelc.g*255, levelc.b*255, info[3], info[1], info[8]), info[4], classc.r,classc.g,classc.b, zonec.r,zonec.g,zonec.b)
+					GameTooltip:AddDoubleLine(format(levelNameStatusString, levelc.r*255, levelc.g*255, levelc.b*255, info[3], info[1], info[8]), info[4], classc.r,classc.g,classc.b, zonec.r,zonec.g,zonec.b)
 				end
 				shown = shown + 1
 			end
 		end
 	end
-	GameTooltip:AddLine(" ")
-	GameTooltip:AddLine("|cffeda55fLeft Click|r to Show Guild Panel")
-	GameTooltip:AddLine("|cffeda55fRight Click|r for More Options")
 	GameTooltip:Show()
 end)
 

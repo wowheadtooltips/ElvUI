@@ -18,8 +18,8 @@ f:SetScript("OnEvent", function()
 			end
 		end
 		if c>0 then
-			-- local g, s, c = math.floor(c/10000) or 0, math.floor((c%10000)/100) or 0, c%100
-			DEFAULT_CHAT_FRAME:AddMessage(L.merchant_trashsell.." "..CopperToString(c)..".",255,255,0)
+			local g, s, c = math.floor(c/10000) or 0, math.floor((c%10000)/100) or 0, c%100
+			DEFAULT_CHAT_FRAME:AddMessage(L.merchant_trashsell.." |cffffffff"..g..L.goldabbrev.." |cffffffff"..s..L.silverabbrev.." |cffffffff"..c..L.copperabbrev..".",255,255,0)
 		end
 	end
 	if not IsShiftKeyDown() then
@@ -85,7 +85,9 @@ end
 local savedMerchantItemButton_OnModifiedClick = MerchantItemButton_OnModifiedClick
 function MerchantItemButton_OnModifiedClick(self, ...)
 	if ( IsAltKeyDown() ) then
-		local maxStack = select(8, GetItemInfo(GetMerchantItemLink(self:GetID())))
+		local itemLink = GetMerchantItemLink(self:GetID())
+		if not itemLink then return end
+		local maxStack = select(8, GetItemInfo(itemLink))
 		if ( maxStack and maxStack > 1 ) then
 			BuyMerchantItem(self:GetID(), GetMerchantItemMaxStack(self:GetID()))
 		end

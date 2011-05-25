@@ -49,15 +49,13 @@ Stat:SetScript("OnEnter", function(self)
 
 	local anchor, panel, xoff, yoff = E.DataTextTooltipAnchor(Text)
 	GameTooltip:SetOwner(panel, anchor, xoff, yoff)
+
 	GameTooltip:ClearLines()
-	GameTooltip:AddLine("Talent Specializations")
 	for i = 1, GetNumTalentGroups() do
 		if GetPrimaryTalentTree(false, false, i) then
 			GameTooltip:AddLine(string.join(" ", string.format(talentString, select(2, GetTalentTabInfo(GetPrimaryTalentTree(false, false, i))), talent[i][1], talent[i][2], talent[i][3]), (i == active and activeString or inactiveString)),1,1,1)
 		end
 	end
-	GameTooltip:AddLine(" ")
-	GameTooltip:AddLine("|cffeda55fClick|r to Change Specs")
 	GameTooltip:Show()
 end)
 
@@ -87,10 +85,6 @@ Stat:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 Stat:SetScript("OnEvent", OnEvent)
 Stat:SetScript("OnUpdate", Update)
 
-Stat:SetScript("OnMouseDown", function(self, button)
-	if button == "LeftButton" then
-		SetActiveTalentGroup(active == 1 and 2 or 1)
-	elseif button == "RightButton" then
-		ToggleTalentFrame()
-	end
+Stat:SetScript("OnMouseDown", function()
+	SetActiveTalentGroup(active == 1 and 2 or 1)
 end)

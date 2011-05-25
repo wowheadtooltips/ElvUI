@@ -74,23 +74,7 @@ if C["general"].upperpanel == true then
 	f:SetFrameLevel(2)
 	f:SetTemplate("Default", true)
 	f:CreateShadow("Default")
-	f:Point("LEFT", ElvuiLocY, "RIGHT", 6, 0)
-	
-	--[[local f = CreateFrame("Frame", "ElvuiStat11Block", ElvuiTopPanel)
-	f:SetHeight(23)
-	f:SetWidth(E.minimapsize / 1.3)
-	f:SetFrameLevel(2)
-	f:SetTemplate("Default", true)
-	f:CreateShadow("Default")
-	f:Point("RIGHT", ElvuiStat9Block, "LEFT", -6, 0)
-	
-	local f = CreateFrame("Frame", "ElvuiStat12Block", ElvuiTopPanel)
-	f:SetHeight(23)
-	f:SetWidth(E.minimapsize / 1.3)
-	f:SetFrameLevel(2)
-	f:SetTemplate("Default", true)
-	f:CreateShadow("Default")
-	f:Point("LEFT", ElvuiStat10Block, "RIGHT", 6, 0)]]
+	f:Point("LEFT", ElvuiLocY, "RIGHT", 6, 0)		
 end
 
 local mini = CreateFrame("Frame", "ElvuiMinimap", Minimap)
@@ -187,6 +171,7 @@ if C["actionbar"].enable == true then
 	vbarbg:SetWidth((E.buttonsize * 12) + (E.buttonspacing * 13))
 	vbarbg:SetHeight(E.buttonsize + (E.buttonspacing * 2))
 	vbarbg:CreateShadow("Default")
+	vbarbg:SetFrameLevel(barbg:GetFrameLevel())
 end
 
 -- CHAT BACKGROUND LEFT (MOVES)

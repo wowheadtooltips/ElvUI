@@ -55,17 +55,17 @@ E.PP(C["datatext"].friends, Text)
 -- Setup the Title Font. 14
 local ssTitleFont = CreateFont("ssTitleFont")
 ssTitleFont:SetTextColor(1,0.823529,0)
-ssTitleFont:SetFont(GameTooltipText:GetFont(), 14)
+ssTitleFont:SetFont(GameTooltipText:GetFont(), 20)
 
 -- Setup the Header Font. 12
 local ssHeaderFont = CreateFont("ssHeaderFont")
 ssHeaderFont:SetTextColor(1,0.823529,0)
-ssHeaderFont:SetFont(GameTooltipHeaderText:GetFont(), 12)
+ssHeaderFont:SetFont(GameTooltipHeaderText:GetFont(), 15)
 
 -- Setup the Regular Font. 12
 local ssRegFont = CreateFont("ssRegFont")
 ssRegFont:SetTextColor(1,0.823529,0)
-ssRegFont:SetFont(GameTooltipText:GetFont(), 12)
+ssRegFont:SetFont(GameTooltipText:GetFont(), 15)
 
 local list_sort = {
 	TOONNAME	=	function(a, b)
@@ -261,13 +261,15 @@ function FriendEnter(self)
 	-------------------------
 	--  Begin RealID list  --
 	-------------------------
-	local _, numBNOnline = BNGetNumFriends()
-	local _, numFriendsOnline = GetNumFriends()
+	local numBNFriends, numBNOnline = BNGetNumFriends()
+	local numFriends, numFriendsOnline = GetNumFriends()
+	local totalOnlineFriends, totalFriends = numBNOnline + numFriendsOnline, numBNFriends + numFriends
 
 	if (numBNOnline > 0) or (numFriendsOnline > 0) then
 		-- Header for Friends
 		line = tooltip:AddLine()
 		tooltip:SetCell(line, 1, "|cffffffff" .. _G.FRIENDS .. "|r", "LEFT", 3)
+		tooltip:SetCell(line, 7, "|cffffffff" .. totalOnlineFriends .. " of " .. totalFriends .. "|r", "RIGHT")
 
 		line = tooltip:AddHeader()
 		line = tooltip:SetCell(line, 1, "  ")

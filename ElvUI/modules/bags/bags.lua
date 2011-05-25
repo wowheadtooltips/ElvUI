@@ -791,6 +791,29 @@ function Stuffing:Layout(lb)
 			b.frame:Size(bsize)
 			b.frame:Show()
 			
+			--Change all bag alpha when mousing over a bag frame to display 
+			--what slots belong to what bag.. 
+			--Feature by Caliburnus
+			local btns = self.buttons
+			b.frame:HookScript("OnEnter", function(self)
+				local bag
+				if lb then bag = v else bag = v + 1 end
+
+				for ind, val in ipairs(btns) do
+					if val.bag == bag then
+						val.frame:SetAlpha(1)
+					else
+						val.frame:SetAlpha(0.2)
+					end
+				end
+			end)
+
+			b.frame:HookScript("OnLeave", function(self)
+				for _, btn in ipairs(btns) do
+					btn.frame:SetAlpha(1)
+				end
+			end)
+			
 			local t = _G[b.frame:GetName().."IconTexture"]
 			b.frame:SetPushedTexture("")
 			b.frame:SetNormalTexture("")
@@ -1004,6 +1027,8 @@ function Stuffing:ADDON_LOADED(addon)
 end
 
 function Stuffing:PLAYER_ENTERING_WORLD()
+	if E.IsPTRVersion() then return end
+	
 	-- setting key ring bag
 	-- this is just a reskin of Blizzard key bag to fit Elvui
 
@@ -1489,25 +1514,27 @@ function Stuffing.Menu(self, level)
 	end
 	UIDropDownMenu_AddButton(info, level)
 	
-	wipe(info)
-	info.text = "Show Keyring"
-	info.checked = function()
-		return key_ring == 1
-	end
-	
-	info.func = function()
-		if key_ring == 1 then
-			key_ring = 0
-		else
-			key_ring = 1
+	if not E.IsPTRVersion() then
+		wipe(info)
+		info.text = "Show Keyring"
+		info.checked = function()
+			return key_ring == 1
 		end
-		ToggleKeyRing()
-		Stuffing:Layout()
+		
+		info.func = function()
+			if key_ring == 1 then
+				key_ring = 0
+			else
+				key_ring = 1
+			end
+			ToggleKeyRing()
+			Stuffing:Layout()
+		end
+		
+		
+		UIDropDownMenu_AddButton(info, level)
 	end
 	
-	
-	UIDropDownMenu_AddButton(info, level)
-
 	wipe(info)
 	info.disabled = nil
 	info.notCheckable = 1

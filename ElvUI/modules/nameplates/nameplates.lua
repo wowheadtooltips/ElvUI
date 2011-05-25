@@ -64,8 +64,13 @@ local function CreateVirtualFrame(parent, point)
 	parent.backdrop:SetDrawLayer("BORDER", -8)
 	parent.backdrop:SetPoint("TOPLEFT", point, "TOPLEFT", -noscalemult*3, noscalemult*3)
 	parent.backdrop:SetPoint("BOTTOMRIGHT", point, "BOTTOMRIGHT", noscalemult*3, -noscalemult*3)
-	parent.backdrop:SetTexture(unpack(C["media"].backdropcolor))
+	parent.backdrop:SetTexture(0, 0, 0, 1)
 
+	parent.backdrop2 = parent:CreateTexture(nil, "BORDER")
+	parent.backdrop2:SetDrawLayer("BORDER", -7)
+	parent.backdrop2:SetAllPoints(point)
+	parent.backdrop2:SetTexture(unpack(C["media"].backdropcolor))	
+	
 	parent.bordertop = parent:CreateTexture(nil, "BORDER")
 	parent.bordertop:SetPoint("TOPLEFT", point, "TOPLEFT", -noscalemult*2, noscalemult*2)
 	parent.bordertop:SetPoint("TOPRIGHT", point, "TOPRIGHT", noscalemult*2, noscalemult*2)
@@ -155,9 +160,8 @@ local function UpdateAuraIcon(button, unit, index, filter)
 end
 
 --Filter auras on nameplate, and determine if we need to update them or not.
-local tab = CLASS_FILTERS[E.myclass].target
 local function OnAura(frame, unit)
-	if not frame.icons or not tab or not frame.unit then return end
+	if not frame.icons or not frame.unit then return end
 	local i = 1
 	for index = 1,40 do
 		if i > 5 then return end
@@ -165,10 +169,7 @@ local function OnAura(frame, unit)
 		local name,_,_,_,_,duration,_,caster,_,_,spellid = UnitAura(frame.unit,index,"HARMFUL")
 		
 		if C["nameplate"].trackauras == true then
-			for _, tab in pairs(tab) do
-				local id = tab.id
-				if caster == "player" then match = true end
-			end
+			if caster == "player" then match = true end
 		end
 		
 		if C["nameplate"].trackccauras == true then

@@ -71,14 +71,6 @@ function E.PP(p, obj)
 			obj:SetHeight(ElvuiStat10Block:GetHeight())
 			obj:SetPoint("CENTER", ElvuiStat10Block, 0, 0)
 			if t ~= true then obj:SetParent(ElvuiStat10Block) else obj:GetParent():SetParent(ElvuiStat10Block) end
-		--[[elseif p == 11 then
-			obj:SetHeight(ElvuiStat11Block:GetHeight())
-			obj:SetPoint("CENTER", ElvuiStat11Block, 0, 0)
-			if t ~= true then obj:SetParent(ElvuiStat11Block) else obj:GetParent():SetParent(ElvuiStat11Block) end
-		elseif p == 12 then
-			obj:SetHeight(ElvuiStat12Block:GetHeight())
-			obj:SetPoint("CENTER", ElvuiStat12Block, 0, 0)
-			if t ~= true then obj:SetParent(ElvuiStat12Block) else obj:GetParent():SetParent(ElvuiStat12Block) end]]
 		end	
 	end
 end

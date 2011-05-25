@@ -111,21 +111,14 @@ local function Update(self, t)
 		int2 = 1
 	end
 end
-Stat:SetScript("OnMouseDown", function(self, button) 
-	local preCollect = UpdateMemory()
-	collectgarbage("collect")
-	Update(Stat, 20)
-	local postCollect = UpdateMemory()
-	print("|cffffff00[ElvUI]|r Garbage Collection Freed |cff00ff00" .. formatMem(preCollect - postCollect) .. "|r")
-end)
+Stat:SetScript("OnMouseDown", function () collectgarbage("collect") Update(Stat, 20) end)
 Stat:SetScript("OnEnter", function(self)
 	local bandwidth = GetAvailableBandwidth()
 	local home_latency = select(3, GetNetStats()) 
 	local anchor, panel, xoff, yoff = E.DataTextTooltipAnchor(Text)
-	local shown = 0
 	GameTooltip:SetOwner(panel, anchor, xoff, yoff)
 	GameTooltip:ClearLines()
-	GameTooltip:AddLine("Addon Memory Usage")
+	
 	GameTooltip:AddDoubleLine(L.datatext_homelatency, string.format(homeLatencyString, home_latency), 0.69, 0.31, 0.31,0.84, 0.75, 0.65)
 	
 	if bandwidth ~= 0 then
@@ -137,17 +130,12 @@ Stat:SetScript("OnEnter", function(self)
 	GameTooltip:AddDoubleLine(L.datatext_totalmemusage, formatMem(totalMemory), 0.69, 0.31, 0.31,0.84, 0.75, 0.65)
 	GameTooltip:AddLine(" ")
 	for i = 1, #memoryTable do
-		-- only show the top 20
-		if 20 - shown <= 1 then break end
 		if (memoryTable[i][4]) then
 			local red = memoryTable[i][3] / totalMemory
 			local green = 1 - red
 			GameTooltip:AddDoubleLine(memoryTable[i][2], formatMem(memoryTable[i][3]), 1, 1, 1, red, green + .5, 0)
-			shown = shown + 1
 		end						
 	end
-	GameTooltip:AddLine(" ")
-	GameTooltip:AddLine("|cffeda55fClick|r to Garbage Collect")
 	GameTooltip:Show()
 end)
 Stat:SetScript("OnLeave", function() GameTooltip:Hide() end)
